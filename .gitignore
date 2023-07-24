@@ -1,0 +1,6 @@
+*.yaml
+*.csv
+*.txt
+*.json
+*.log
+*.pyc
