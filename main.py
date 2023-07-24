@@ -79,7 +79,7 @@ if __name__ == '__main__':
     chrome_options = webdriver.ChromeOptions()
     # chrome_driver_path = "C:\\binaries\\chrome-win32\\chromedriver.exe"
     chrome_options.add_experimental_option("prefs", {
-        "download.default_directory": "D:\\0.Code\\1.Scripts\\python\\barracuda\\scr\\data",
+        "download.default_directory": "D:\\0.Code\\1.Scripts\\python\\barracuda\\scraper\\data",
         "download.prompt_for_download": False,
         "download.directory_upgrade": True,
         "safebrowsing.enabled": True})
