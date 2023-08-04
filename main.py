@@ -77,9 +77,11 @@ def getDataAutomatically(nav, wait_time):
 
 if __name__ == '__main__':
     chrome_options = webdriver.ChromeOptions()
-    # chrome_driver_path = "C:\\binaries\\chrome-win32\\chromedriver.exe"
+    CHROME_DRIVER_PATH = "D:\\_code\\_binaries\\chrome-win32\\chromedriver.exe"
+    # chrome_options.binary_location = "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe"
+
     chrome_options.add_experimental_option("prefs", {
-        "download.default_directory": "D:\\0.Code\\1.Scripts\\python\\barracuda\\scraper\\data",
+        "download.default_directory": "D:\\_code\\_menethil\\_brcd\\scraper\\data",
         "download.prompt_for_download": False,
         "download.directory_upgrade": True,
         "safebrowsing.enabled": True})

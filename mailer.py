@@ -67,7 +67,7 @@ def func_send_emails(server, senderaddress, email_data, content):
                 response = server.sendmail(f"Zen Alerts <{senderaddress}>",recipient_email,email_content.as_string(),)
                 logging.info(msg=f"Response from sendmail for {recipient_email}: {response}")
                 func_update_sent_column(email_data, [recipient_email])
-                for t in range(10, 0, -1):
+                for t in range(20, 0, -1):
                     print(f"Next email will be sent in {t} seconds")
                     time.sleep(1)
                 print("Email sent!")

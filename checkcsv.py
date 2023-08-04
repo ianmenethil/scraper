@@ -4,7 +4,7 @@ import os
 import re
 import traceback
 
-data_directory = 'D:\\0.Code\\1.Scripts\\python\\barracuda\\scraper\\data'
+data_directory = 'D:\\_code\\_menethil\\_brcd\\scraper\\data'
 UNWANTED_CHARS = ['\u0251', '\u2009']
 UNWANTED_BYTES = [b'\x8f', b'\ufffd']
 
