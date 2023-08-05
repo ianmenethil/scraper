@@ -8,7 +8,6 @@ import pandas as pd
 DATA_DIRECTORY = './data/'
 MAIN_FILE = './data/main.csv'
 FILE_EXTENSION = '.csv'
-MID = ['Message ID', '"Message ID"']
 PATTERNS = [
             r"(?<!\d)\d{4}-\d{4}(\d{7})(?!\d)",
             r"(?<!\d)(\d{4}-\d{2})(\d{3}-\d{2})(\d{4})(?!\d)",
@@ -75,27 +74,25 @@ def read_data_from_csv(file_path):
 def func_merge_data(main_file_path, new_file_path):
     try:
         logging.info("Start merging data from %s to %s", new_file_path, main_file_path)
-        logging.info("Reading data from %s", main_file_path)
-        logging.info("Reading data from %s", new_file_path)
+        # logging.info("Reading data from %s", main_file_path)  # NOSONAR
+        # logging.info("Reading data from %s", new_file_path)
         if not os.path.isfile(new_file_path):
             logging.error("File not found:%s", {new_file_path})
             return
         headers1, data1 = read_data_from_csv(main_file_path)
         headers2, data2 = read_data_from_csv(new_file_path)
-        # if 'Message ID' not in headers1 or 'Message ID' not in headers2:
-        #     logging.error("'Message ID' not in headers")
-        #     return
-        # message_id_index1 = headers1.index('Message ID')
-        # message_id_index2 = headers2.index('Message ID')
-        if MID not in headers1 or MID not in headers2:
-            logging.error("%s not in headers", MID)
+        if 'Message ID' not in headers1 or 'Message ID' not in headers2:
+            logging.error("'Message ID' not in headers")
             return
-        message_id_index1 = headers1.index(MID)
-        message_id_index2 = headers2.index(MID)
+        message_id_index1 = headers1.index('Message ID')
+        message_id_index2 = headers2.index('Message ID')
+
         existing_message_ids = set(row[message_id_index1] for row in data1)
         unique_data = [row for row in data2 if row[message_id_index2] not in existing_message_ids]
+
         unique_data = [row + [0] for row in unique_data]
         merged_data = data1 + unique_data
+
         with open(main_file_path, 'w', newline='', encoding='utf-8') as csvfile:
             writer = csv.writer(csvfile)
             writer.writerow(headers1)
