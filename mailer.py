@@ -8,7 +8,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 import pandas as pd
 from checkcsv import check_credit_card, obfuscate_cc
-from _menethil._brcd.scraper.configs_setup import load_emailer_config_file
+from configs_setup import load_emailer_config_file
 
 CONFIG_FILE = "emailerConfig.yaml"
 RUNNING_FILE = "data\\main.csv"

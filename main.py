@@ -3,8 +3,8 @@ import sys
 import time
 from selenium import webdriver
 from navigator import Navigator
-import _menethil._brcd.scraper.user_inputs as user_inputs
-from _menethil._brcd.scraper.configs_setup import load_config
+import user_inputs
+from configs_setup import CONFIG_FILE, load_config
 S = time.sleep
 
 logging.basicConfig(filename='logs/scraper.log',
@@ -19,7 +19,7 @@ logging.getLogger('').addHandler(console)
 def main(web_driver):
     logging.info('Main function started')
     try:
-        config = load_config('config.yaml')
+        config = load_config(CONFIG_FILE)
     except ValueError as error:
         logging.error(msg=f"An error occurred while loading configuration: {error}")
         sys.exit(1)
@@ -55,7 +55,7 @@ def start_get_data(nav, wait_time, choice):
 def start_get_data_auto(nav, wait_time):
     while True:
         logging.info('start_get_data: [Flow2] getting getNewData_callDuplicates()')
-        nav.navigate_setupQEPageDetails()
+        nav.setup_messagelogs_table()
         for minute in range(wait_time // 60):
             logging.info("Sleep time | Total left: %s minutes.", wait_time//60 - minute)
             S(60)

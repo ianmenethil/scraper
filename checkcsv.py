@@ -3,10 +3,13 @@ import logging
 import os
 import re
 import traceback
-DATA_DIRECTORY = 'D:\\_code\\_menethil\\_brcd\\scraper\\data'
-MAIN_FILE = 'main.csv'
+import pandas as pd
+
+# DATA_DIRECTORY = 'D:\\_code\\_menethil\\_brcd\\scraper\\data'
+DATA_DIRECTORY = './data/'
+MAIN_FILE = './data/main.csv'
 FILE_EXTENSION = '.csv'
-MID = 'Message ID'
+# MID = ['Message ID', '"Message ID"']
 PATTERNS = [
             r"(?<!\d)\d{4}-\d{4}(\d{7})(?!\d)",
             r"(?<!\d)(\d{4}-\d{2})(\d{3}-\d{2})(\d{4})(?!\d)",
@@ -21,6 +24,20 @@ PATTERNS = [
 UNWANTED_CHARS = ['\u0251', '\u2009']
 UNWANTED_BYTES = [b'\\x8f', b'\\ufffd']
 
+logging.basicConfig(
+    filename="logs\\checkcsv.log",
+    level=logging.DEBUG,
+    encoding="utf-8",
+    format="%(asctime)s - %(levelname)s - %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+    filemode="a",)
+console = logging.StreamHandler()
+console.setLevel(logging.INFO)
+logging.getLogger("").addHandler(console)
+pd.set_option("display.max_columns", None)
+pd.set_option("display.width", 1000)
+pd.set_option("display.max_colwidth", 100)
+
 def check_credit_card(df):
     try:
         df['Subject'] = df['Subject'].astype(str).apply(obfuscate_cc)
@@ -34,9 +51,10 @@ def obfuscate_cc(credit_card_data):
         credit_card_data = re.sub(pattern, lambda m: m.group(0)[:4] + " XXXX XXXX " + m.group(0)[-4:], credit_card_data)
     return credit_card_data
 
-def find_csv_files(directory):
-    logging.info(msg=f"Finding CSV files in {directory}")
-    return [file for file in os.listdir(directory) if file.endswith(FILE_EXTENSION) and file != MAIN_FILE]
+def find_csv_files():
+    logging.info(msg=f"Finding CSV files in {DATA_DIRECTORY}")
+    all_files = [file for file in os.listdir(DATA_DIRECTORY) if file.endswith(FILE_EXTENSION)]
+    return [file for file in all_files if file != os.path.basename(MAIN_FILE)]
 
 def read_data_from_csv(file_path):
     try:
@@ -58,13 +76,24 @@ def read_data_from_csv(file_path):
 def func_merge_data(main_file_path, new_file_path):
     try:
         logging.info("Start merging data from %s to %s", new_file_path, main_file_path)
+        logging.info("Reading data from %s", main_file_path)
+        logging.info("Reading data from %s", new_file_path)
+        if not os.path.isfile(new_file_path):
+            logging.error("File not found:%s", {new_file_path})
+            return
         headers1, data1 = read_data_from_csv(main_file_path)
         headers2, data2 = read_data_from_csv(new_file_path)
-        if MID not in headers1 or MID not in headers2:
-            logging.error("%s not in headers", MID)
+        if 'Message ID' not in headers1 or 'Message ID' not in headers2:
+            logging.error("'Message ID' not in headers")
             return
-        message_id_index1 = headers1.index(MID)
-        message_id_index2 = headers2.index(MID)
+        message_id_index1 = headers1.index('Message ID')
+        message_id_index2 = headers2.index('Message ID')
+
+        # if MID not in headers1 or MID not in headers2:
+        #     logging.error("%s not in headers", MID)
+        #     return
+        # message_id_index1 = headers1.index(MID)
+        # message_id_index2 = headers2.index(MID)
         existing_message_ids = set(row[message_id_index1] for row in data1)
         unique_data = [row for row in data2 if row[message_id_index2] not in existing_message_ids]
         unique_data = [row + [0] for row in unique_data]
@@ -112,7 +141,8 @@ def remove_unwanted_bytes(file_path, bytes, replacement=b' '):
         data = data.replace(byte, replacement)
     with open(file_path, 'wb') as file:
         file.write(data)
-csv_files = find_csv_files(DATA_DIRECTORY)
+
+csv_files = find_csv_files()
 os.path.join(DATA_DIRECTORY, MAIN_FILE)
 for file in csv_files:
     file_path = os.path.join(DATA_DIRECTORY, file)
@@ -126,5 +156,5 @@ for file in csv_files:
         func_merge_data(MAIN_FILE, file_path)
     except FileNotFoundError as error:
         print(f"Error: {error}")
-    except Exception as error:
+    except Exception as error:  # pylint: disable=broad-except
         print(f"Unexpected error occurred: {error}")
