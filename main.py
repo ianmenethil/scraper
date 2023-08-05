@@ -3,6 +3,7 @@ import sys
 import time
 from selenium import webdriver
 from navigator import Navigator
+
 import user_inputs
 from configs_setup import CONFIG_FILE, load_config
 import pandas as pd
