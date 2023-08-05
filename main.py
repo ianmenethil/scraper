@@ -7,7 +7,7 @@ import user_inputs
 from configs_setup import CONFIG_FILE, load_config
 S = time.sleep
 
-logging.basicConfig(filename='logs/scraper.log',
+logging.basicConfig(filename='logs/main.log',
                     level=logging.INFO, encoding='utf-8',
                     format='%(asctime)s - %(levelname)s - %(message)s',
                     datefmt='%Y-%m-%d %H:%M:%S',
@@ -48,13 +48,11 @@ def start_get_data(nav, wait_time, choice):
         start_get_data_auto(nav, wait_time)
     else:
         logging.error("Invalid choice.")
-        # should_exit = True
-    # return should_exit
     return None
 
 def start_get_data_auto(nav, wait_time):
     while True:
-        logging.info('start_get_data: [Flow2] getting getNewData_callDuplicates()')
+        logging.info('start_get_data_auto')
         nav.setup_messagelogs_table()
         for minute in range(wait_time // 60):
             logging.info("Sleep time | Total left: %s minutes.", wait_time//60 - minute)
@@ -64,7 +62,7 @@ def start_get_data_auto(nav, wait_time):
 if __name__ == '__main__':
     chrome_options = webdriver.ChromeOptions()
     CHROME_DRIVER_PATH = "D:\\_code\\_binaries\\chrome-win32\\chromedriver.exe"
-    # chrome_options.binary_location = "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe" # for windows
+    # chrome_options.binary_location = "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe"
     chrome_options.add_experimental_option("prefs", {
         "download.default_directory": "D:\\_code\\_menethil\\_brcd\\scraper\\data",
         "download.prompt_for_download": False,

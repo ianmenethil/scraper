@@ -5,11 +5,10 @@ import re
 import traceback
 import pandas as pd
 
-# DATA_DIRECTORY = 'D:\\_code\\_menethil\\_brcd\\scraper\\data'
 DATA_DIRECTORY = './data/'
 MAIN_FILE = './data/main.csv'
 FILE_EXTENSION = '.csv'
-# MID = ['Message ID', '"Message ID"']
+MID = ['Message ID', '"Message ID"']
 PATTERNS = [
             r"(?<!\d)\d{4}-\d{4}(\d{7})(?!\d)",
             r"(?<!\d)(\d{4}-\d{2})(\d{3}-\d{2})(\d{4})(?!\d)",
@@ -25,12 +24,12 @@ UNWANTED_CHARS = ['\u0251', '\u2009']
 UNWANTED_BYTES = [b'\\x8f', b'\\ufffd']
 
 logging.basicConfig(
-    filename="logs\\checkcsv.log",
+    filename="./logs/checkcsv.log",
     level=logging.DEBUG,
     encoding="utf-8",
     format="%(asctime)s - %(levelname)s - %(message)s",
     datefmt="%Y-%m-%d %H:%M:%S",
-    filemode="a",)
+    filemode="a")
 console = logging.StreamHandler()
 console.setLevel(logging.INFO)
 logging.getLogger("").addHandler(console)
@@ -63,7 +62,7 @@ def read_data_from_csv(file_path):
             reader = csv.reader(file)
             print(f'Reading from file: {file_path}')
             try:
-                headers = next(reader)  # Check that reader is not empty
+                headers = next(reader)
             except StopIteration:
                 logging.error("CSV file is empty:%s,", file_path)
                 return ([], [])
@@ -83,17 +82,16 @@ def func_merge_data(main_file_path, new_file_path):
             return
         headers1, data1 = read_data_from_csv(main_file_path)
         headers2, data2 = read_data_from_csv(new_file_path)
-        if 'Message ID' not in headers1 or 'Message ID' not in headers2:
-            logging.error("'Message ID' not in headers")
-            return
-        message_id_index1 = headers1.index('Message ID')
-        message_id_index2 = headers2.index('Message ID')
-
-        # if MID not in headers1 or MID not in headers2:
-        #     logging.error("%s not in headers", MID)
+        # if 'Message ID' not in headers1 or 'Message ID' not in headers2:
+        #     logging.error("'Message ID' not in headers")
         #     return
-        # message_id_index1 = headers1.index(MID)
-        # message_id_index2 = headers2.index(MID)
+        # message_id_index1 = headers1.index('Message ID')
+        # message_id_index2 = headers2.index('Message ID')
+        if MID not in headers1 or MID not in headers2:
+            logging.error("%s not in headers", MID)
+            return
+        message_id_index1 = headers1.index(MID)
+        message_id_index2 = headers2.index(MID)
         existing_message_ids = set(row[message_id_index1] for row in data1)
         unique_data = [row for row in data2 if row[message_id_index2] not in existing_message_ids]
         unique_data = [row + [0] for row in unique_data]

@@ -11,7 +11,6 @@ def get_choice():
     return userinput_valid_choice
 
 def auto_flow():
-    # should_exit = False
     default_wait_time = 1200  # 20 minutes
     wait_time = input(
                         """

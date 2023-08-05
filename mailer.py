@@ -11,10 +11,10 @@ from checkcsv import check_credit_card, obfuscate_cc
 from configs_setup import load_emailer_config_file
 
 CONFIG_FILE = "emailerConfig.yaml"
-RUNNING_FILE = "data\\main.csv"
+RUNNING_FILE = "./data/main.csv"
 
 logging.basicConfig(
-    filename="logs\\senderlogs.log",
+    filename="logs/mailer.log",
     level=logging.DEBUG,
     encoding="utf-8",
     format="%(asctime)s - %(levelname)s - %(message)s",
@@ -126,11 +126,9 @@ def func_create_email_data(email_data):
                 action_email = email["Action"]
                 reason_email = email["Reason"]
                 body += f"<tr><td>{var_message_id}</td><td>{from_email}</td><td>{to_email}</td><td>{subject_email}</td><td>{date_email}</td><td>{size_email}</td><td>{action_email}</td><td>{reason_email}</td></tr>"
-
             body += """</table><br>"""
             body += """<p style="color: blue; font-size: 10px; font-family: 'Open Sans', Arial, sans-serif; font-style: italic;">Inbox is not monitored. Please do not reply back.</p>"""
             body += """<p style="color: blue; font-size: 8px; font-family: 'Open Sans', Arial, sans-serif; font-style: italic;">This is an automated email. For app-related technical issues, contact <a href="mailto:ian@zenithpayments.com.au">Ian Menethil</a>.</p>"""
-
             body_plain = f"Hi {recipient_name},\n\n"
             body_plain += "This automated message is to notify that there are quarantined emails within the Barracuda system linked to "
             body_plain += f"{recipient_email}.\n\n"
@@ -149,7 +147,6 @@ def func_create_email_data(email_data):
                 body_plain += f"MessageID: {var_message_id}, From: {from_email}, To: {to_email}, Subject: {subject_email}, Date: {date_email}, Size: {size_email}, Action: {action_email}, Reason: {reason_email}\n"
             body_plain += "\nInbox is not monitored. Please do not reply back.\n"
             body_plain += "This is an automated email. For app-related technical issues, contact Ian Menethil.\n"
-
             all_subjects = " | ".join([email["Subject"]for email in [e for e in email_data if e["To"] == recipient_email]])
             msg["Subject"] = email_subject + all_subjects
             msg["To"] = recipient_email
@@ -189,8 +186,6 @@ def main():
                     for data in existing_data
                     if data["To"] not in do_not_send_list and (data["emailStatus"] != "1")]
                 logging.info("Emails to be sent: %s", [data['To'] for data in existing_data])
-                # logging.info(f"Emails to be sent: {[data['To'] for data in existing_data]}")
-                # logging.info("Emails to be sent:%s", {[data['To'] for data in existing_data]})
                 server = func_create_email_server(config[2], config[3], config[0], config[1])
                 email_content = func_create_email_data(existing_data)
                 logging.info("Logging email content: %s", email_content)
