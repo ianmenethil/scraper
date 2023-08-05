@@ -5,6 +5,8 @@ from selenium import webdriver
 from navigator import Navigator
 import user_inputs
 from configs_setup import CONFIG_FILE, load_config
+import pandas as pd
+
 S = time.sleep
 
 logging.basicConfig(filename='logs/main.log',
@@ -15,6 +17,12 @@ logging.basicConfig(filename='logs/main.log',
 console = logging.StreamHandler()
 console.setLevel(level=logging.INFO)
 logging.getLogger('').addHandler(console)
+console = logging.StreamHandler()
+console.setLevel(logging.INFO)
+logging.getLogger("").addHandler(console)
+pd.set_option("display.max_columns", None)
+pd.set_option("display.width", 1000)
+pd.set_option("display.max_colwidth", 100)
 
 def main(web_driver):
     logging.info('Main function started')
