@@ -3,27 +3,19 @@ import sys
 import time
 from selenium import webdriver
 from navigator import Navigator
-
 import user_inputs
 from configs_setup import CONFIG_FILE, load_config
-import pandas as pd
 
 S = time.sleep
 
 logging.basicConfig(filename='logs/main.log',
-                    level=logging.INFO, encoding='utf-8',
+                    level=logging.DEBUG, encoding='utf-8',
                     format='%(asctime)s - %(levelname)s - %(message)s',
                     datefmt='%Y-%m-%d %H:%M:%S',
                     filemode='w')
 console = logging.StreamHandler()
 console.setLevel(level=logging.INFO)
 logging.getLogger('').addHandler(console)
-console = logging.StreamHandler()
-console.setLevel(logging.INFO)
-logging.getLogger("").addHandler(console)
-pd.set_option("display.max_columns", None)
-pd.set_option("display.width", 1000)
-pd.set_option("display.max_colwidth", 100)
 
 def main(web_driver):
     logging.info('Main function started')
@@ -40,8 +32,8 @@ def main(web_driver):
             if not choice:
                 choice = user_inputs.get_choice()
             if choice == '2':
-                logging.info('fn_main: Flow2')
                 wait_time, choice = user_inputs.auto_flow()
+                S(5)
                 nav.scr_brcd_login_screen(config['BARRACUDA_USERNAME'],
                                           config['BARRACUDA_PASSWORD'],
                                           config['BARRACUDA_URL'])
@@ -52,7 +44,6 @@ def main(web_driver):
             break
 
 def start_get_data(nav, wait_time, choice):
-    logging.info('fn_start_get_data() BEGIN')
     if choice == "2":
         start_get_data_auto(nav, wait_time)
     else:
@@ -77,5 +68,6 @@ if __name__ == '__main__':
         "download.prompt_for_download": False,
         "download.directory_upgrade": True,
         "safebrowsing.enabled": True})
+    chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
     driver = webdriver.Chrome(options=chrome_options)
     main(driver)

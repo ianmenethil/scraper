@@ -12,55 +12,51 @@ class Navigator:
     def __init__(self, driver):
         self.driver = driver
 
-    def interact_with_element(self, locator, action, data=None, description=None, error_message=None):
-        try:
-            element = WebDriverWait(self.driver, 60).until(EC.presence_of_element_located(locator))
-            if action == "send_keys":
-                element.send_keys(data)
-            elif action == "click":
-                element.click()
-            if description:
-                logging.info("%s", description)
-            S(1)
-        except TimeoutException as timeout_exception:
-            logging.error("Error interacting with element %s: %s", locator, timeout_exception)
-        except Exception as exception:
-            logging.error("Error interacting with element %s: %s", locator, exception)
-            if error_message:
-                user_input = input(error_message)
-                logging.error("User entered: %s", user_input)
-                if user_input.lower() == 'exit':
-                    sys.exit()
-                elif user_input.lower() == '':
-                    pass
-
     def scr_brcd_login_screen(self, barracuda_username, barracuda_password, barracuda_url):
         logging.debug("scr_brcd_login_screen")
         self.driver.get(barracuda_url)
         S(1)
-        self.interact_with_element((By.ID, "username"), "send_keys", barracuda_username, 'Username entered', "Username Element not found. Press 'Enter' to try again or enter 'exit' to quit: ")
-        self.interact_with_element((By.ID, "submit"), "click", None, 'Next button clicked', "Next button not found. Press 'Enter' to continue manually or enter 'exit' to quit: ")
-        self.interact_with_element((By.ID, "password"), "send_keys", barracuda_password, 'Password entered', "Password field not found. Press 'Enter' to continue manually or enter 'exit' to quit: ")
-        self.interact_with_element((By.ID, "submit"), "click", None, 'Sign-in button clicked', "Sign-in button not found. Press 'Enter' to continue manually or enter 'exit' to quit: ")
-        self.interact_with_element((By.ID, "KmsiCheckboxField"), "click", None, 'Checkbox clicked', "Checkbox not found. Press 'Enter' to continue manually or enter 'exit' to quit: ")
-        self.interact_with_element((By.ID, "idSIButton9"), "click", None, 'Yes button clicked', "Yes button not found. Press 'Enter' to continue manually or enter 'exit' to quit: ")
 
+        try:
+            username_field = WebDriverWait(self.driver, 60).until(EC.presence_of_element_located((By.ID, "username")))
+            S(1)
+            username_field.send_keys(barracuda_username)
+            logging.info('Username entered')
+            S(1)
+            next_button = self.driver.find_element(By.ID, "submit")
+            next_button.click()
+            S(2)
+        except TimeoutException:
+            logging.error("Reached timeout exception block")
+            username_field = input("Element not found. Press 'Enter' to try again or enter 'exit' to quit: ")
+            logging.error("User entered: %s", {username_field})
+            if username_field.lower() == 'exit':
+                sys.exit()
+        try:
+            password_field = WebDriverWait(self.driver, 60).until(EC.presence_of_element_located((By.ID, "password")))
+            password_field.send_keys(barracuda_password)
+            logging.info('Password entered')
+            S(1)
+            signin_button = self.driver.find_element(By.ID, "submit")
+            signin_button.click()
+            S(5)
+        except TimeoutException:
+            logging.error("Reached timeout exception block")
+            password_field = input("password_field Element not found. Press 'Enter' to continue manually or enter 'exit' to quit: ")
+            logging.error("User entered: %s", {password_field})
+            if password_field.lower() == 'exit':
+                sys.exit()
+        try:
+            tick_checkbox = WebDriverWait(self.driver, 15).until(EC.presence_of_element_located((By.ID, "KmsiCheckboxField")))
+            tick_checkbox.click()
+            S(1)
+            yes_button = self.driver.find_element(By.ID, "idSIButton9")
+            yes_button.click()
+            logging.info("Checkbox done")
+        except TimeoutException:
+            logging.error("Element not found within the given time. Skipping this step.")
         logging.info("Barracuda Page")
         S(3)
-        # If using MFA, uncomment the following lines
-        # password_field = WebDriverWait(self.driver, 60).until(EC.presence_of_element_located((By.ID, "i0118")))
-        # password_field.send_keys(barracuda_password)
-        # logging.info('Password entered')
-        # S(1)
-        # signin_button = self.driver.find_element(By.ID, "idSIButton9")
-        # signin_button.click()
-        # S(5)
-
-        # # OTP via SMS
-        # trigger_otp_button = self.driver.find_element(By.XPATH, "//div[@data-value='OneWaySMS']")
-        # trigger_otp_button.click()
-        # input("Script Halted | Enter OTP from SMS then press enter")
-        # S(2)
 
     def brcd_main_screen(self):
         logging.info("https://ess.barracudanetworks.com/log")
