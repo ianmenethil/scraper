@@ -25,7 +25,6 @@ console = logging.StreamHandler()
 console.setLevel(logging.INFO)
 logging.getLogger("").addHandler(console)
 
-
 def func_read_csv_file(running_file):
     debug_message = "Reading with unicode_escape from mailer.py readcsvfile"
     print(debug_message)
@@ -159,7 +158,6 @@ def func_create_email_data(email_data):
         logging.error("Error: %s", {e_except})
 
 def main():
-    # logging.info('Before calling checkcsv.py')
     subprocess.check_call(["python", "checkcsv.py"])
     # logging.info('After calling checkcsv.py')
     config = load_emailer_config_file(CONFIG_FILE)
@@ -180,17 +178,13 @@ def main():
                     data
                     for data in existing_data
                     if data["To"] not in do_not_send_list and (data["emailStatus"] != "1")]
-                
                 logging.info("Emails to be sent: %s", [data['To'] for data in existing_data])
-                
-                # Only try to send emails if there's data to send
                 if existing_data:
                     server = func_create_email_server(config[2], config[3], config[0], config[1])
                     email_content = func_create_email_data(existing_data)
                     logging.debug("Logging email content: %s", email_content)
                     logging.debug("Email data: %s", existing_data)
                     func_send_emails(server, config[0], existing_data, email_content)
-                
                 logging.info("Sleep time | Total left: %s seconds", total_seconds_left)
                 print(f"Next run scheduled in {total_seconds_left / 60} minutes")
                 time.sleep(10)
@@ -198,33 +192,6 @@ def main():
         except Exception as e_except:  # pylint: disable=broad-except
             logging.error("Error: %s", e_except)
             traceback.print_exc()
-
-    # while True:
-    #     try:
-    #         total_seconds_left = wait_time
-    #         while total_seconds_left > 0:
-    #             subprocess.check_call(["python", "checkcsv.py"])
-    #             print('After calling checkcsv.py in the loop')
-    #             existing_data = func_read_csv_file(RUNNING_FILE)
-    #             do_not_send_list = ['']
-    #             existing_data = [
-    #                 data
-    #                 for data in existing_data
-    #                 if data["To"] not in do_not_send_list and (data["emailStatus"] != "1")]
-    #             logging.info("Emails to be sent: %s", [data['To'] for data in existing_data])
-    #             server = func_create_email_server(config[2], config[3], config[0], config[1])
-    #             email_content = func_create_email_data(existing_data)
-    #             logging.debug("Logging email content: %s", email_content)
-    #             logging.debug("Email data: {existing_data}")
-    #             func_send_emails(server, config[0], existing_data, email_content)
-    #             logging.info("Sleep time | Total left: %s seconds", {total_seconds_left})
-    #             print(f"Next run scheduled in {total_seconds_left / 60} minutes")
-    #             time.sleep(10)
-    #             total_seconds_left -= 10
-    #     except Exception as e_except:  # pylint: disable=broad-except
-    #         logging.error("Error: %s", {e_except})
-    #         traceback.print_exc()
-
 
 if __name__ == "__main__":
     main()
