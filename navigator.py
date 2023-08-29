@@ -13,10 +13,10 @@ class Navigator:
         self.driver = driver
 
     def scr_brcd_login_screen(self, barracuda_username, barracuda_password, barracuda_url):
+        # sourcery skip: class-extract-method, extract-duplicate-method
         logging.debug("scr_brcd_login_screen")
         self.driver.get(barracuda_url)
         S(1)
-
         try:
             username_field = WebDriverWait(self.driver, 60).until(EC.presence_of_element_located((By.ID, "username")))
             S(1)
@@ -64,7 +64,7 @@ class Navigator:
         S(1)
         try:
             logging.info(msg="looking for accept_cookies - Id: onetrust-accept-btn-handler")
-            accept_cookies = WebDriverWait(self.driver, 60).until(EC.presence_of_element_located((By.ID, "onetrust-accept-btn-handler")))
+            accept_cookies = WebDriverWait(self.driver, 20).until(EC.presence_of_element_located((By.ID, "onetrust-accept-btn-handler")))
             self.driver.execute_script("arguments[0].scrollIntoView();", accept_cookies)
             try:
                 accept_cookies.click()
@@ -93,12 +93,17 @@ class Navigator:
             logging.error(msg="Message Log button not found within 10 seconds.")
             S(5)
 
+    # def setup_dropdown_values(self, wait, element_name, value):
+    #     dropdown_element = wait.until(EC.presence_of_element_located((By.ID, element_name)))
+    #     dropdown = Select(dropdown_element)
+    #     dropdown.select_by_visible_text(value)
+
     def setup_dropdown_values(self, wait, element_name, value):
-        dropdown_element = wait.until(EC.presence_of_element_located((By.ID, element_name)))
+        dropdown_element = wait.until(EC.visibility_of_element_located((By.ID, element_name)))
         dropdown = Select(dropdown_element)
         dropdown.select_by_visible_text(value)
 
-    def setup_messagelogs_table(self):
+    def setup_messagelogs_table(self):  # sourcery skip: extract-duplicate-method
         try:
             from_header = WebDriverWait(self.driver, 60).until(EC.element_to_be_clickable((By.CSS_SELECTOR, "td.from")))
             from_header.click()
@@ -113,7 +118,11 @@ class Navigator:
             S(1)
             advancedsearch_dropdown_option = WebDriverWait(self.driver, 60).until(EC.presence_of_element_located((By.ID, "log-advanced-search-toggle")))
             advancedsearch_dropdown_option.click()
-            S(1)
+            S(2)
+            limit_dropdown_option = WebDriverWait(self.driver, 60).until(EC.presence_of_element_located((By.ID, "limit")))
+            limit_dropdown_option_select = Select(limit_dropdown_option)
+            limit_dropdown_option_select.select_by_visible_text("200")
+            S(2)
             wait = WebDriverWait(self.driver, 60)
             self.setup_dropdown_values(wait, "domain_id_select", "All domains")
             logging.info('domain_id_select: All domains')
@@ -137,11 +146,12 @@ class Navigator:
             checkbox_td = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, 'td.details')))
             checkbox = checkbox_td.find_element(By.XPATH, './/input[@type="checkbox"]')
             checkbox.click()
+            S(2)
             logging.info("Select All tick box clicked")
             export_button = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, 'div#log-bd div#log-main form#log-form div#log-main-tb div.toolbar span.button-group button[value="export"]')))
-            S(1)
+            S(3)
             export_button.click()
-            logging.info('Sleep 10')
-            S(10)
+            logging.info('Sleep 30/Waiting on download')
+            S(30)
         except TimeoutException:
             logging.info("setup_messagelogs_table() TimeoutException")

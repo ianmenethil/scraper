@@ -13,71 +13,75 @@ from configs_setup import load_emailer_config_file
 CONFIG_FILE = "emailerConfig.yaml"
 RUNNING_FILE = "./data/main.csv"
 
-logging.basicConfig(
-    filename="logs/mailer.log",
-    level=logging.DEBUG,
-    encoding="utf-8",
-    format="%(asctime)s - %(levelname)s - %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S",
-    filemode="a",)
-
+logger = logging.getLogger('mailerLogger')
+logger.setLevel(logging.DEBUG)
+# Clear existing handlers to ensure no duplication
+logger.handlers.clear()
+# File handler
+file_handler = logging.FileHandler("logs/mailer.log", mode="w", encoding="utf-8")
+file_handler.setLevel(logging.DEBUG)
+file_format = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s", datefmt="%Y-%m-%d %H:%M:%S")
+file_handler.setFormatter(file_format)
+logger.addHandler(file_handler)
+# Console handler
 console = logging.StreamHandler()
 console.setLevel(logging.INFO)
-logging.getLogger("").addHandler(console)
+console_format = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s", datefmt="%Y-%m-%d %H:%M:%S")
+console.setFormatter(console_format)
+logger.addHandler(console)
+logger.propagate = False
 
 def func_read_csv_file(running_file):
-    debug_message = "Reading with unicode_escape from mailer.py readcsvfile"
-    print(debug_message)
     existing_data = []
     try:
         with open(RUNNING_FILE, "r", encoding="utf-8", errors="ignore"):
-            print("Reading with unicode_escape from mailer.py readcsvfile")
             data_frame = pd.read_csv(RUNNING_FILE, encoding='unicode_escape')
         data_frame = check_credit_card(data_frame)
         data_frame = data_frame[(data_frame["emailStatus"].astype(str) != "1")]
-        logging.info("Data read from CSV file: %s existing_data : %s", data_frame.to_string().encode('utf-8', errors='replace').decode('utf-8'), existing_data)
+        logger.debug("Data read from CSV file:%s%s", data_frame.to_string().encode('utf-8', errors='replace').decode('utf-8'), existing_data)
         existing_data = data_frame.to_dict("records")
     except FileNotFoundError:
-        logging.error("CSV file not found: %s", running_file)
-    except Exception as e_except:  # pylint: disable=broad-except
-        logging.error("Error reading existing data from CSV file: %s", {str(e_except)})
+        logger.error("CSV file not found: %s", running_file)
+    except Exception as err_except:  # pylint: disable=broad-except
+        logger.error("Error reading existing data from CSV file: %s", {str(err_except)})
     return existing_data
 
+# def func_update_sent_column(email_list):
 def func_update_sent_column(email_data, email_list):
     try:
         data_frame = pd.read_csv(RUNNING_FILE)
         for index, row in data_frame.iterrows():
             if row["To"] in email_list:
                 data_frame.at[index, "emailStatus"] = "1"
-                logging.info("Updating CSV file with %s and %s", row, email_list)
+                logger.debug("Updating CSV file with %s and %s", row, email_list)
         data_frame.to_csv(RUNNING_FILE, index=False, encoding='utf-8', errors='ignore')
-    except Exception as e_except:  # pylint: disable=broad-except
-        logging.error("Error updating sent column: %s", {str(e_except)})
+    except Exception as err_except:  # pylint: disable=broad-except
+        logger.error("Error updating sent column: %s", {str(err_except)})
 
 def func_send_emails(server, senderaddress, email_data, content):
-    unique_emails = set([data["To"] for data in email_data])
-    # logging.info("Sending email to unique: %s", unique_emails)
+    unique_emails = {data["To"] for data in email_data}
+    # logger.info("Sending email to unique: %s", unique_emails)
     for recipient_email in unique_emails:
-        # logging.info("Current recipient_email: %s", recipient_email)
+        # logger.info("Current recipient_email: %s", recipient_email)
         if recipient_email in content:
-            logging.info("Preparing to send email to: %s", recipient_email)
+            # logger.info("Preparing to send email to: %s", recipient_email)
             try:
                 email_content = content[recipient_email]
                 email_content["Subject"] = obfuscate_cc(email_content["Subject"])
                 response = server.sendmail(f"Zen Alerts <{senderaddress}>", recipient_email, email_content.as_string(),)
-                logging.info(msg=f"Response from sendmail for {recipient_email}: {response}")
+                logger.debug(msg=f"Response from sendmail for {recipient_email}: {response}")
                 func_update_sent_column(email_data, [recipient_email])
                 for timer in range(20, 0, -1):
                     print(f"Next email will be sent in {timer} seconds")
                     time.sleep(1)
                 print("Email sent!")
             except smtplib.SMTPException as e_smtp:
-                logging.error("Failed to send email to %s: %s", recipient_email, e_smtp)
-                logging.error(traceback.format_exc())
+                logger.error("Failed to send email to %s: %s", recipient_email, e_smtp)
+                logger.error(traceback.format_exc())
 
 def func_create_email_server(smtp_server, port, senderaddress, senderpassword):
     try:
-        logging.info("Connecting to SMTP server %s:%s with username %s, local_hostname='localhost'", smtp_server, port, senderaddress)
+        logger.info("Connecting to SMTP server %s:%s with username %s, local_hostname='localhost'", smtp_server, port, senderaddress)
         server = smtplib.SMTP(smtp_server, port, local_hostname='localhost')
         server.starttls()
         server.login(senderaddress, senderpassword)
@@ -85,20 +89,21 @@ def func_create_email_server(smtp_server, port, senderaddress, senderpassword):
     except smtplib.SMTPAuthenticationError:
         raise
     except smtplib.SMTPException as e_smtp:
-        logging.error("SMTP Exception occurred: %s", {str(e_smtp)})
+        logger.error("SMTP Exception occurred: %s", {str(e_smtp)})
     except ConnectionError as e_conerr:
-        logging.error("Connection Error occurred: %s", {str(e_conerr)})
-    except Exception as e_except:  # pylint: disable=broad-except
-        logging.error("Unknown error occurred: %s,", {str(e_except)})
+        logger.error("Connection Error occurred: %s", {str(e_conerr)})
+    except Exception as err_except:  # pylint: disable=broad-except
+        logger.error("Unknown error occurred: %s,", {str(err_except)})
 
 def func_create_email_data(email_data):
+    # sourcery skip: merge-assign-and-aug-assign
     var_created_email_list = []
-    unique_emails = set([email["To"] for email in email_data])
+    unique_emails = {email["To"] for email in email_data}
     try:
         for recipient_email in unique_emails:
             msg = MIMEMultipart("alternative")
             recipient_name = recipient_email.split("@")[0].capitalize()
-            email_subject = f"Quarantined Emails[{datetime.today().strftime('%d/%m/%Y %H:%M')}] | Subject: "
+            email_subject = f"Quarantined Emails[{datetime.now().strftime('%d/%m/%Y %H:%M')}] | Subject: "
             body = """<p style="color: blue; font-size: 10px; font-family: 'Open Sans', Arial, sans-serif; font-style: italic;">Inbox is not monitored. Please do not reply back.</p>"""
             body += """<p style="font-size: 12px; font-family: 'Open Sans', Arial, sans-serif;">Hi """
             body += f"{recipient_name},"
@@ -148,49 +153,50 @@ def func_create_email_data(email_data):
             msg.attach(part1)
             part2 = MIMEText(body, "html")
             msg.attach(part2)
-            logging.info("Created email for %s with subject %s", recipient_email, msg['Subject'])
+            logger.info("Created email for %s with subject %s", recipient_email, msg['Subject'])
             var_created_email_list.append(msg)
-            logging.debug(msg)
+            # logger.debug(msg)
         for msg in var_created_email_list:
-            logging.info("var_created_email_list: %s", msg["To"])
-        return {email: msg for email, msg in zip(unique_emails, var_created_email_list)}
-    except Exception as e_except:  # pylint: disable=broad-except
-        logging.error("Error: %s", {e_except})
+            logger.debug("Email created for: %s", msg["To"])
+        return dict(zip(unique_emails, var_created_email_list))
+    except Exception as err_except:  # pylint: disable=broad-except
+        logger.error("Error: %s", {err_except})
 
 def main():
-    subprocess.check_call(["python", "checkcsv.py"])
-    # logging.info('After calling checkcsv.py')
     config = load_emailer_config_file(CONFIG_FILE)
-    # logging.info(msg="Config loaded.")
+    # logger.info(msg="Config loaded.")
     default_wait_time = 1200
     wait_time = input("How often do you want to send new emails? Press Enter to use default (20) or enter a number in minutes:")
-    logging.info("User entered: %s", {wait_time})
+    logger.info("User entered: %s", {wait_time})
     wait_time = default_wait_time if wait_time == "" else int(wait_time) * 60
+
+    def core_actions():
+        subprocess.check_call(["python", "checkcsv.py"])
+        print('After calling checkcsv.py in the loop')
+        existing_data = func_read_csv_file(RUNNING_FILE)
+        do_not_send_list = ['']
+        existing_data = [
+            data
+            for data in existing_data
+            if data["To"] not in do_not_send_list and (data["emailStatus"] != "1")]
+        logger.debug("Emails to be sent: %s", [data['To'] for data in existing_data])
+        if existing_data:
+            server = func_create_email_server(config[2], config[3], config[0], config[1])
+            email_content = func_create_email_data(existing_data)
+            # logger.debug("Logging email content: %s", email_content)
+            logger.debug("Email data: %s", existing_data)
+            func_send_emails(server, config[0], existing_data, email_content)
     while True:
         try:
+            core_actions()
             total_seconds_left = wait_time
             while total_seconds_left > 0:
-                subprocess.check_call(["python", "checkcsv.py"])
-                print('After calling checkcsv.py in the loop')
-                existing_data = func_read_csv_file(RUNNING_FILE)
-                do_not_send_list = ['']
-                existing_data = [
-                    data
-                    for data in existing_data
-                    if data["To"] not in do_not_send_list and (data["emailStatus"] != "1")]
-                logging.info("Emails to be sent: %s", [data['To'] for data in existing_data])
-                if existing_data:
-                    server = func_create_email_server(config[2], config[3], config[0], config[1])
-                    email_content = func_create_email_data(existing_data)
-                    logging.debug("Logging email content: %s", email_content)
-                    logging.debug("Email data: %s", existing_data)
-                    func_send_emails(server, config[0], existing_data, email_content)
-                logging.info("Sleep time | Total left: %s seconds", total_seconds_left)
+                logger.info("Sleep time | Total left: %s seconds", total_seconds_left)
                 print(f"Next run scheduled in {total_seconds_left / 60} minutes")
-                time.sleep(10)
-                total_seconds_left -= 10
-        except Exception as e_except:  # pylint: disable=broad-except
-            logging.error("Error: %s", e_except)
+                time.sleep(60)
+                total_seconds_left -= 60
+        except Exception as err_except:  # pylint: disable=broad-except
+            logger.error("Error: %s", err_except)
             traceback.print_exc()
 
 if __name__ == "__main__":

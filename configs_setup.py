@@ -1,6 +1,4 @@
 import logging
-import time
-
 import yaml
 
 CONFIG_FILE = 'config.yaml'
@@ -23,15 +21,6 @@ def load_config(config_file):
         raise ValueError(ERROR_VARS_MISSING)
     return config
 
-def check_config_changes(current_config):
-    while True:
-        # check for changes in the config file
-        new_config = load_config(config_file=CONFIG_FILE)
-        if new_config != current_config:
-            logging.info(msg='Configuration file has been updated')
-            current_config = new_config
-        time.sleep(10)
-
 def load_emailer_config_file(email_config_file):
     try:
         with open(file=email_config_file, mode='r', encoding="utf-8") as file:
@@ -39,12 +28,10 @@ def load_emailer_config_file(email_config_file):
     except FileNotFoundError:
         logging.error(msg=ERROR_FNF)
         raise
-
     senderaddress = data.get('FROM_EMAIL_USERNAME')
     senderpassword = data.get('FROM_EMAIL_PASSWORD')
     smtp_server = data.get('SMTP_SERVER')
     port = data.get('SMTP_PORT')
-
     if not all([senderaddress, senderpassword, smtp_server, port]):
         logging.error(msg=ERROR_VARS_MISSING)
         raise ValueError(ERROR_VARS_MISSING)
