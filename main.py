@@ -73,7 +73,7 @@ def main(web_driver):
         except ValueError as error:
             logging.error("An error occurred on main(): %s", error)
             break
-        except Exception as e_except:
+        except Exception as e_except:  # ignore pylint: disable=broad-except
             logging.error("Unexpected error occurred in main(): %s", e_except)
             break
 

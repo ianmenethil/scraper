@@ -146,7 +146,7 @@ def main():
             merge_data(MAIN_FILE, file_path)
         except FileNotFoundError as error:
             logger.error("Error: %s", error)
-        except Exception as error:
+        except Exception as error:  # ignore pylint: disable=broad-except
             logger.error("Unexpected error occurred: %s", error)
 
 if __name__ == "__main__":
