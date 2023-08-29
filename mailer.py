@@ -35,10 +35,10 @@ def func_read_csv_file(running_file):
     existing_data = []
     try:
         with open(RUNNING_FILE, "r", encoding="utf-8", errors="ignore"):
-            data_frame = pd.read_csv(RUNNING_FILE, encoding='unicode_escape')
+            data_frame = pd.read_csv(RUNNING_FILE, encoding='utf-8')
         data_frame = check_credit_card(data_frame)
         data_frame = data_frame[(data_frame["emailStatus"].astype(str) != "1")]
-        logger.debug("Data read from CSV file:%s%s", data_frame.to_string().encode('utf-8', errors='replace').decode('utf-8'), existing_data)
+        # logger.debug("Data read from CSV file:%s%s", data_frame.to_string().encode('utf-8', errors='replace').decode('utf-8'), existing_data)
         existing_data = data_frame.to_dict("records")
     except FileNotFoundError:
         logger.error("CSV file not found: %s", running_file)
@@ -46,14 +46,13 @@ def func_read_csv_file(running_file):
         logger.error("Error reading existing data from CSV file: %s", {str(err_except)})
     return existing_data
 
-# def func_update_sent_column(email_list):
-def func_update_sent_column(email_data, email_list):
+def update_sent_column(email_list):
     try:
         data_frame = pd.read_csv(RUNNING_FILE)
         for index, row in data_frame.iterrows():
             if row["To"] in email_list:
                 data_frame.at[index, "emailStatus"] = "1"
-                logger.debug("Updating CSV file with %s and %s", row, email_list)
+                # logger.debug("Updating CSV file with %s and %s", row, email_list)
         data_frame.to_csv(RUNNING_FILE, index=False, encoding='utf-8', errors='ignore')
     except Exception as err_except:  # pylint: disable=broad-except
         logger.error("Error updating sent column: %s", {str(err_except)})
@@ -68,9 +67,10 @@ def func_send_emails(server, senderaddress, email_data, content):
             try:
                 email_content = content[recipient_email]
                 email_content["Subject"] = obfuscate_cc(email_content["Subject"])
-                response = server.sendmail(f"Zen Alerts <{senderaddress}>", recipient_email, email_content.as_string(),)
-                logger.debug(msg=f"Response from sendmail for {recipient_email}: {response}")
-                func_update_sent_column(email_data, [recipient_email])
+                # response = server.sendmail(f"Zen Alerts <{senderaddress}>", recipient_email, email_content.as_string(),)
+                server.sendmail(f"Zen Alerts <{senderaddress}>", recipient_email, email_content.as_string(),)
+                # logger.debug(msg=f"Response from sendmail for {recipient_email}: {response}")
+                update_sent_column([recipient_email])
                 for timer in range(20, 0, -1):
                     print(f"Next email will be sent in {timer} seconds")
                     time.sleep(1)
@@ -149,15 +149,15 @@ def func_create_email_data(email_data):
             all_subjects = " | ".join([email["Subject"]for email in [e for e in email_data if e["To"] == recipient_email]])
             msg["Subject"] = email_subject + all_subjects
             msg["To"] = recipient_email
-            part1 = MIMEText(body_plain, "plain")
+            part1 = MIMEText(body_plain, "plain", "utf-8")
             msg.attach(part1)
-            part2 = MIMEText(body, "html")
+            part2 = MIMEText(body, "html", "utf-8")
             msg.attach(part2)
             logger.info("Created email for %s with subject %s", recipient_email, msg['Subject'])
             var_created_email_list.append(msg)
             # logger.debug(msg)
-        for msg in var_created_email_list:
-            logger.debug("Email created for: %s", msg["To"])
+        # for msg in var_created_email_list:
+        #     logger.debug("Email created for: %s", msg["To"])
         return dict(zip(unique_emails, var_created_email_list))
     except Exception as err_except:  # pylint: disable=broad-except
         logger.error("Error: %s", {err_except})
@@ -167,7 +167,7 @@ def main():
     # logger.info(msg="Config loaded.")
     default_wait_time = 1200
     wait_time = input("How often do you want to send new emails? Press Enter to use default (20) or enter a number in minutes:")
-    logger.info("User entered: %s", {wait_time})
+    logger.info("User entered: %s", wait_time)
     wait_time = default_wait_time if wait_time == "" else int(wait_time) * 60
 
     def core_actions():
@@ -175,24 +175,19 @@ def main():
         print('After calling checkcsv.py in the loop')
         existing_data = func_read_csv_file(RUNNING_FILE)
         do_not_send_list = ['']
-        existing_data = [
-            data
-            for data in existing_data
-            if data["To"] not in do_not_send_list and (data["emailStatus"] != "1")]
-        logger.debug("Emails to be sent: %s", [data['To'] for data in existing_data])
+        existing_data = [data for data in existing_data if data["To"] not in do_not_send_list and (data["emailStatus"] != "1")]
+        # logger.debug("Emails to be sent: %s", [data['To'] for data in existing_data])
         if existing_data:
             server = func_create_email_server(config[2], config[3], config[0], config[1])
             email_content = func_create_email_data(existing_data)
-            # logger.debug("Logging email content: %s", email_content)
-            logger.debug("Email data: %s", existing_data)
+            # logger.debug("Logging email content: %s, existing data: %s", email_content, existing_data)
             func_send_emails(server, config[0], existing_data, email_content)
     while True:
         try:
             core_actions()
             total_seconds_left = wait_time
             while total_seconds_left > 0:
-                logger.info("Sleep time | Total left: %s seconds", total_seconds_left)
-                print(f"Next run scheduled in {total_seconds_left / 60} minutes")
+                logger.info("Next run scheduled in %s minutes", total_seconds_left / 60)
                 time.sleep(60)
                 total_seconds_left -= 60
         except Exception as err_except:  # pylint: disable=broad-except

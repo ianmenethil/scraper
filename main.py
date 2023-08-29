@@ -7,7 +7,7 @@ from navigator import Navigator
 from configs_setup import CONFIG_FILE, load_config
 S = time.sleep
 
-logger = logging.getLogger()
+logger = logging.getLogger('getMainLogger')
 logger.setLevel(logging.DEBUG)
 # File handler
 file_handler = logging.FileHandler("logs/mailer.log", mode="w", encoding="utf-8")
@@ -22,8 +22,8 @@ console_format = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s", 
 console.setFormatter(console_format)
 logger.addHandler(console)
 
-def start_get_data(nav, wait_time):
-    start_get_data_auto(nav, wait_time)
+# def start_get_data(nav, wait_time):
+#     start_get_data_auto(nav, wait_time)
 
 def start_get_data_auto(nav, wait_time):
     while True:
@@ -81,7 +81,7 @@ def main(web_driver):
             S(3)
             nav.scr_brcd_login_screen(config['BARRACUDA_USERNAME'], config['BARRACUDA_PASSWORD'], config['BARRACUDA_URL'])
             nav.brcd_main_screen()
-            start_get_data(nav, wait_time)
+            start_get_data_auto(nav, wait_time)
         except ValueError as error:
             logging.error("An error occurred on main(): %s", error)
             break
