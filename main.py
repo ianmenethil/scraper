@@ -3,7 +3,6 @@ import sys
 import time
 from selenium import webdriver
 from navigator import Navigator
-# import user_inputs
 from configs_setup import CONFIG_FILE, load_config
 S = time.sleep
 
@@ -22,9 +21,6 @@ console_format = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s", 
 console.setFormatter(console_format)
 logger.addHandler(console)
 
-# def start_get_data(nav, wait_time):
-#     start_get_data_auto(nav, wait_time)
-
 def start_get_data_auto(nav, wait_time):
     while True:
         logger.info('start_get_data_auto')
@@ -32,7 +28,7 @@ def start_get_data_auto(nav, wait_time):
         for minute in range(wait_time // 60):
             logger.info("Sleep time | Total left: %s minutes.", wait_time//60 - minute)
             S(60)
-    return False
+    # return False
 
 def load_chrome_driver():
     chrome_options = webdriver.ChromeOptions()
@@ -49,10 +45,6 @@ def load_chrome_driver():
     chrome_options.add_argument("--window-size=1920x1080")
     return webdriver.Chrome(options=chrome_options)
 
-# def get_choice():  # sourcery skip: inline-immediately-returned-variable
-#     userinput_valid_choice = '2'
-#     return userinput_valid_choice
-
 def auto_flow():
     default_wait_time = 1200  # 20 minutes
     wait_time = input("""Press enter to use the default timer(20 minutes) or enter a new timer in minutes: """)
@@ -68,20 +60,16 @@ def main(web_driver):
         logging.error("An error occurred while loading configuration: %s", error)
         sys.exit(1)
     nav = Navigator(driver=web_driver)
-    # choice = None
-    S(1)
     while True:
         try:
-            # if not choice:
-            #     # choice = user_inputs.get_choice()
-            #     choice = get_choice()
-            # if choice == '2':
-            #     # wait_time, choice = user_inputs.auto_flow()
             wait_time = auto_flow()
             S(3)
             nav.scr_brcd_login_screen(config['BARRACUDA_USERNAME'], config['BARRACUDA_PASSWORD'], config['BARRACUDA_URL'])
+            S(2)
             nav.brcd_main_screen()
+            S(2)
             start_get_data_auto(nav, wait_time)
+            S(1)
         except ValueError as error:
             logging.error("An error occurred on main(): %s", error)
             break
