@@ -1,4 +1,3 @@
-import logging
 import smtplib
 import subprocess
 import time
@@ -8,34 +7,15 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 import pandas as pd
 from checkcsv import check_credit_card, obfuscate_cc
-from configs_setup import load_emailer_config_file
+from configs_setup import load_emailer_config_file, setup_logger, EMAIL_CONFIG_FILE, MAIN_CSV_FILE
 
-CONFIG_FILE = "emailerConfig.yaml"
-RUNNING_FILE = "./data/main.csv"
-
-logger = logging.getLogger('mailerLogger')
-logger.setLevel(logging.DEBUG)
-# Clear existing handlers to ensure no duplication
-logger.handlers.clear()
-# File handler
-file_handler = logging.FileHandler("logs/mailer.log", mode="w", encoding="utf-8")
-file_handler.setLevel(logging.DEBUG)
-file_format = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s", datefmt="%Y-%m-%d %H:%M:%S")
-file_handler.setFormatter(file_format)
-logger.addHandler(file_handler)
-# Console handler
-console = logging.StreamHandler()
-console.setLevel(logging.INFO)
-console_format = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s", datefmt="%Y-%m-%d %H:%M:%S")
-console.setFormatter(console_format)
-logger.addHandler(console)
-logger.propagate = False
+logger = setup_logger('getMailerLogger', "logs/mailer.log")
 
 def func_read_csv_file(running_file):
     existing_data = []
     try:
-        with open(RUNNING_FILE, "r", encoding="utf-8", errors="ignore"):
-            data_frame = pd.read_csv(RUNNING_FILE, encoding='utf-8')
+        with open(MAIN_CSV_FILE, "r", encoding="utf-8", errors="ignore"):
+            data_frame = pd.read_csv(MAIN_CSV_FILE, encoding='utf-8')
         data_frame = check_credit_card(data_frame)
         data_frame = data_frame[(data_frame["emailStatus"].astype(str) != "1")]
         # logger.debug("Data read from CSV file:%s%s", data_frame.to_string().encode('utf-8', errors='replace').decode('utf-8'), existing_data)
@@ -48,12 +28,12 @@ def func_read_csv_file(running_file):
 
 def update_sent_column(email_list):
     try:
-        data_frame = pd.read_csv(RUNNING_FILE)
+        data_frame = pd.read_csv(MAIN_CSV_FILE)
         for index, row in data_frame.iterrows():
             if row["To"] in email_list:
                 data_frame.at[index, "emailStatus"] = "1"
                 # logger.debug("Updating CSV file with %s and %s", row, email_list)
-        data_frame.to_csv(RUNNING_FILE, index=False, encoding='utf-8', errors='ignore')
+        data_frame.to_csv(MAIN_CSV_FILE, index=False, encoding='utf-8', errors='ignore')
     except Exception as err_except:  # pylint: disable=broad-except
         logger.error("Error updating sent column: %s", {str(err_except)})
 
@@ -162,18 +142,55 @@ def func_create_email_data(email_data):
     except Exception as err_except:  # pylint: disable=broad-except
         logger.error("Error: %s", {err_except})
 
-def main():
-    config = load_emailer_config_file(CONFIG_FILE)
+# def main():
+#     config = load_emailer_config_file(EMAIL_CONFIG_FILE)
+#     # logger.info(msg="Config loaded.")
+#     default_wait_time = 1200
+#     wait_time = input("How often do you want to send new emails? Press Enter to use default (20) or enter a number in minutes:")
+#     logger.info("User entered: %s", wait_time)
+#     wait_time = default_wait_time if wait_time == "" else int(wait_time) * 60
+
+#     def core_actions():
+#         subprocess.check_call(["python", "checkcsv.py"])
+#         print('After calling checkcsv.py in the loop')
+#         existing_data = func_read_csv_file(MAIN_CSV_FILE)
+#         do_not_send_list = ['']
+#         existing_data = [data for data in existing_data if data["To"] not in do_not_send_list and (data["emailStatus"] != "1")]
+#         # logger.debug("Emails to be sent: %s", [data['To'] for data in existing_data])
+#         if existing_data:
+#             server = func_create_email_server(config[2], config[3], config[0], config[1])
+#             email_content = func_create_email_data(existing_data)
+#             # logger.debug("Logging email content: %s, existing data: %s", email_content, existing_data)
+#             func_send_emails(server, config[0], existing_data, email_content)
+#     while True:
+#         try:
+#             core_actions()
+#             total_seconds_left = wait_time
+#             while total_seconds_left > 0:
+#                 logger.info("Next run scheduled in %s minutes", total_seconds_left / 60)
+#                 time.sleep(60)
+#                 total_seconds_left -= 60
+#         except Exception as err_except:  # pylint: disable=broad-except
+#             logger.error("Error: %s", err_except)
+#             traceback.print_exc()
+
+def main(interactive=False, once=False):
+    config = load_emailer_config_file(EMAIL_CONFIG_FILE)
     # logger.info(msg="Config loaded.")
     default_wait_time = 1200
-    wait_time = input("How often do you want to send new emails? Press Enter to use default (20) or enter a number in minutes:")
-    logger.info("User entered: %s", wait_time)
-    wait_time = default_wait_time if wait_time == "" else int(wait_time) * 60
+    if interactive:
+        logger.info("Mailer activated in: Interactive mode")
+        wait_time = input("How often do you want to send new emails? Press Enter to use default (20) or enter a number in minutes:")
+        logger.info("User entered: %s", wait_time)
+        wait_time = default_wait_time if wait_time == "" else int(wait_time) * 60
+    else:
+        logger.info("Mailer activated in: Not in interactive mode")
+        wait_time = default_wait_time
 
     def core_actions():
         subprocess.check_call(["python", "checkcsv.py"])
         print('After calling checkcsv.py in the loop')
-        existing_data = func_read_csv_file(RUNNING_FILE)
+        existing_data = func_read_csv_file(MAIN_CSV_FILE)
         do_not_send_list = ['']
         existing_data = [data for data in existing_data if data["To"] not in do_not_send_list and (data["emailStatus"] != "1")]
         # logger.debug("Emails to be sent: %s", [data['To'] for data in existing_data])
@@ -182,6 +199,9 @@ def main():
             email_content = func_create_email_data(existing_data)
             # logger.debug("Logging email content: %s, existing data: %s", email_content, existing_data)
             func_send_emails(server, config[0], existing_data, email_content)
+    if once:  # If 'once' is True, execute core actions only once.
+        core_actions()
+        return
     while True:
         try:
             core_actions()

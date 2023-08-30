@@ -1,13 +1,11 @@
 import csv
-import logging
 import os
 import re
 import traceback
+from configs_setup import setup_logger, MAIN_CSV_FILE, DATA_DIRECTORY, FILE_EXTENSION
 
-# Constants
-DATA_DIRECTORY = './data/'
-MAIN_FILE = './data/main.csv'
-FILE_EXTENSION = '.csv'
+UNWANTED_CHARS = ['\u0251', '\u2009']
+UNWANTED_BYTES = [b'\\x8f', b'\\ufffd']
 CREDIT_CARD_PATTERNS = [
             r"(?<!\d)4(\d{3}[-\s]?\d{4}[-\s]?\d{4}[-\s]?\d{4})(?!\d)",  # visa
             r"(?<!\d)5[1-5](\d{2}[-\s]?\d{4}[-\s]?\d{4}[-\s]?\d{4})(?!\d)",  # mc
@@ -18,23 +16,8 @@ CREDIT_CARD_PATTERNS = [
             r"([^0-9-]|^)(3(4[0-9]{2}|7[0-9]{2})( |-|)[0-9]{6}( |-|)[0-9]{5})([^0-9-]|$)",  # amex
             r"([^0-9-]|^)(4[0-9]{3}( |-|)([0-9]{4})( |-|)([0-9]{4})( |-|)([0-9]{4}))([^0-9-]|$)",
             r"([^0-9-]|^)(5[0-9]{3}( |-|)([0-9]{4})( |-|)([0-9]{4})( |-|)([0-9]{4}))([^0-9-]|$)"]
-UNWANTED_CHARS = ['\u0251', '\u2009']
-UNWANTED_BYTES = [b'\\x8f', b'\\ufffd']
 
-logger = logging.getLogger('getCheckcsvLogger')
-logger.setLevel(logging.DEBUG)
-# File handler
-file_handler = logging.FileHandler("logs/checkcsv.log", mode="w", encoding="utf-8")
-file_handler.setLevel(logging.DEBUG)
-file_format = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s", datefmt="%Y-%m-%d %H:%M:%S")
-file_handler.setFormatter(file_format)
-logger.addHandler(file_handler)
-# Console handler
-console = logging.StreamHandler()
-console.setLevel(logging.INFO)
-console_format = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s", datefmt="%Y-%m-%d %H:%M:%S")
-console.setFormatter(console_format)
-logger.addHandler(console)
+logger = setup_logger('getcheckCSVLogger', "logs/checkcsv.log")
 
 class CSVHandler:
     @staticmethod
@@ -86,11 +69,7 @@ class CSVHandler:
         with open(file_path, 'wb') as file:
             file.write(data)
 
-def merge_data(main_file_path, new_file_path):
-    """
-    Merges data from the new_file into the main_file based on unique 'Message ID'.
-    Once merged, the new_file is deleted.
-    """
+def merge_data(main_file_path, new_file_path):  # Merges data from the new_file into the main_file based on unique 'Message ID'. Once merged, the new_file is deleted.
     try:
         if not os.path.isfile(new_file_path):
             logger.error("File not found: %s", new_file_path)
@@ -125,8 +104,7 @@ def find_csv_files(directory, main_file):
     all_files = [os.path.join(directory, file) for file in os.listdir(directory) if file.endswith(FILE_EXTENSION)]
     return [file for file in all_files if file != main_file]
 
-def check_credit_card(data_frame):
-    """Obfuscates credit card details in the 'Subject' column of a dataframe."""
+def check_credit_card(data_frame):  # Obfuscates credit card details in the 'Subject' column of a dataframe.
     try:
         data_frame['Subject'] = data_frame['Subject'].astype(str).apply(obfuscate_cc)
     except Exception as e_exception:
@@ -135,7 +113,7 @@ def check_credit_card(data_frame):
     return data_frame
 
 def main():
-    csv_files = find_csv_files(DATA_DIRECTORY, MAIN_FILE)
+    csv_files = find_csv_files(DATA_DIRECTORY, MAIN_CSV_FILE)
     for file_path in csv_files:
         try:
             CSVHandler.remove_unwanted_bytes(file_path, UNWANTED_BYTES)
@@ -143,7 +121,7 @@ def main():
             CSVHandler.find_chars_in_csv(file_path, *UNWANTED_CHARS)
             for byte in UNWANTED_BYTES:
                 CSVHandler.find_byte_in_csv(file_path, byte)
-            merge_data(MAIN_FILE, file_path)
+            merge_data(MAIN_CSV_FILE, file_path)
         except FileNotFoundError as error:
             logger.error("Error: %s", error)
         except Exception as error:  # ignore pylint: disable=broad-except
