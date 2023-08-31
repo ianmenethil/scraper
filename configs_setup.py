@@ -4,32 +4,29 @@ import yaml
 MAIN_CONFIG_FILE = 'config.yaml'
 EMAIL_CONFIG_FILE = 'emailerConfig.yaml'
 MAIN_CSV_FILE = './data/main.csv'
-DATA_DIRECTORY = './data/'
+DATA_DIRECTORY = './data/testdata/'
 FILE_EXTENSION = '.csv'
 
 ERROR_FNF = 'Config file not found.'
 ERROR_VARS_MISSING = 'One or more environment variables are missing.'
 
 def setup_logger(name, log_file, level=logging.INFO):
-    # sourcery skip: extract-duplicate-method
     logger = logging.getLogger(name)
     logger.setLevel(level)
     logger.propagate = False
-
     # File handler
     file_handler = logging.FileHandler(log_file, mode="a", encoding="utf-8")
-    file_handler.setLevel(level)
-    file_format = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s", datefmt="%Y-%m-%d %H:%M:%S")
-    file_handler.setFormatter(file_format)
-    logger.addHandler(file_handler)
-
+    setup_handlers(file_handler, level, logger)
     # Console handler
     console = logging.StreamHandler()
-    console.setLevel(level)
-    console_format = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s", datefmt="%Y-%m-%d %H:%M:%S")
-    console.setFormatter(console_format)
-    logger.addHandler(console)
+    setup_handlers(console, level, logger)
     return logger
+
+def setup_handlers(handler, level, logger):
+    handler.setLevel(level)
+    file_format = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s", datefmt="%Y-%m-%d %H:%M:%S")
+    handler.setFormatter(file_format)
+    logger.addHandler(handler)
 
 def load_config(config_file):
     try:

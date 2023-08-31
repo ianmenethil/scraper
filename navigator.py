@@ -29,11 +29,11 @@ class Navigator:
             next_button.click()
             S(1)
         except TimeoutException:
-            logger.error("Reached timeout exception block")
-            username_field = input("Element not found. Press 'Enter' to try again or enter 'exit' to quit: ")
-            logger.error("User entered: %s", {username_field})
-            if username_field.lower() == 'exit':
-                sys.exit()
+            logger.error("Username field or submit button could not be found within the given time.")
+            # username_field = input("Element not found. Press 'Enter' to try again or enter 'exit' to quit: ")
+            # logger.error("User entered: %s", {username_field})
+            # if username_field.lower() == 'exit':
+            #     sys.exit()
         try:
             password_field = WebDriverWait(self.driver, 60).until(EC.presence_of_element_located((By.ID, "password")))
             S(1)
@@ -59,7 +59,6 @@ class Navigator:
             S(5)
         except TimeoutException:
             logger.error("Checkbox Element not found within the given time. Skipping this step.")
-        logger.info("Barracuda Page")
 
     def brcd_main_screen(self):
         logger.info("https://ess.barracudanetworks.com/log")
@@ -136,8 +135,8 @@ class Navigator:
             self.setup_dropdown_values(wait, "limit", "200")
             logger.info('Table Limit: 200')
             S(1)
-            self.setup_dropdown_values(wait, "search_range_select", "1 day")
-            logger.info('Date Range: 1 day')
+            self.setup_dropdown_values(wait, "search_range_select", "2 days")
+            logger.info('Date Range: 2 days')
             S(1)
             self.setup_dropdown_values(wait, "search_delivery_status", "Not Delivered")
             logger.info('Delivery Status: Not Delivered')

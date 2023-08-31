@@ -37,7 +37,29 @@ def update_sent_column(email_list):
     except Exception as err_except:  # pylint: disable=broad-except
         logger.error("Error updating sent column: %s", {str(err_except)})
 
+# def func_send_emails(server, senderaddress, email_data, content):
+#     unique_emails = {data["To"] for data in email_data}
+#     # logger.info("Sending email to unique: %s", unique_emails)
+#     for recipient_email in unique_emails:
+#         # logger.info("Current recipient_email: %s", recipient_email)
+#         if recipient_email in content:
+#             # logger.info("Preparing to send email to: %s", recipient_email)
+#             try:
+#                 email_content = content[recipient_email]
+#                 email_content["Subject"] = obfuscate_cc(email_content["Subject"])
+#                 # response = server.sendmail(f"Zen Alerts <{senderaddress}>", recipient_email, email_content.as_string(),)
+#                 server.sendmail(f"Zen Alerts <{senderaddress}>", recipient_email, email_content.as_string(),)
+#                 # logger.debug(msg=f"Response from sendmail for {recipient_email}: {response}")
+#                 update_sent_column([recipient_email])
+#                 for timer in range(20, 0, -1):
+#                     print(f"Next email will be sent in {timer} seconds")
+#                     time.sleep(1)
+#                 print("Email sent!")
+#             except smtplib.SMTPException as e_smtp:
+#                 logger.error("Failed to send email to %s: %s", recipient_email, e_smtp)
+#                 logger.error(traceback.format_exc())
 def func_send_emails(server, senderaddress, email_data, content):
+    current_time = datetime.now().time()
     unique_emails = {data["To"] for data in email_data}
     # logger.info("Sending email to unique: %s", unique_emails)
     for recipient_email in unique_emails:
@@ -45,16 +67,16 @@ def func_send_emails(server, senderaddress, email_data, content):
         if recipient_email in content:
             # logger.info("Preparing to send email to: %s", recipient_email)
             try:
+                for timer in range(20, 0, -1):
+                    logger.info("Next email will be sent to %s with subject %s in %s seconds.", recipient_email, content[recipient_email]["Subject"], timer)
+                    time.sleep(1)
                 email_content = content[recipient_email]
                 email_content["Subject"] = obfuscate_cc(email_content["Subject"])
                 # response = server.sendmail(f"Zen Alerts <{senderaddress}>", recipient_email, email_content.as_string(),)
                 server.sendmail(f"Zen Alerts <{senderaddress}>", recipient_email, email_content.as_string(),)
                 # logger.debug(msg=f"Response from sendmail for {recipient_email}: {response}")
                 update_sent_column([recipient_email])
-                for timer in range(20, 0, -1):
-                    print(f"Next email will be sent in {timer} seconds")
-                    time.sleep(1)
-                print("Email sent!")
+                logger.info("Email sent to %s with subject %s at %s", recipient_email, email_content["Subject"], current_time)
             except smtplib.SMTPException as e_smtp:
                 logger.error("Failed to send email to %s: %s", recipient_email, e_smtp)
                 logger.error(traceback.format_exc())
@@ -141,38 +163,6 @@ def func_create_email_data(email_data):
         return dict(zip(unique_emails, var_created_email_list))
     except Exception as err_except:  # pylint: disable=broad-except
         logger.error("Error: %s", {err_except})
-
-# def main():
-#     config = load_emailer_config_file(EMAIL_CONFIG_FILE)
-#     # logger.info(msg="Config loaded.")
-#     default_wait_time = 1200
-#     wait_time = input("How often do you want to send new emails? Press Enter to use default (20) or enter a number in minutes:")
-#     logger.info("User entered: %s", wait_time)
-#     wait_time = default_wait_time if wait_time == "" else int(wait_time) * 60
-
-#     def core_actions():
-#         subprocess.check_call(["python", "checkcsv.py"])
-#         print('After calling checkcsv.py in the loop')
-#         existing_data = func_read_csv_file(MAIN_CSV_FILE)
-#         do_not_send_list = ['']
-#         existing_data = [data for data in existing_data if data["To"] not in do_not_send_list and (data["emailStatus"] != "1")]
-#         # logger.debug("Emails to be sent: %s", [data['To'] for data in existing_data])
-#         if existing_data:
-#             server = func_create_email_server(config[2], config[3], config[0], config[1])
-#             email_content = func_create_email_data(existing_data)
-#             # logger.debug("Logging email content: %s, existing data: %s", email_content, existing_data)
-#             func_send_emails(server, config[0], existing_data, email_content)
-#     while True:
-#         try:
-#             core_actions()
-#             total_seconds_left = wait_time
-#             while total_seconds_left > 0:
-#                 logger.info("Next run scheduled in %s minutes", total_seconds_left / 60)
-#                 time.sleep(60)
-#                 total_seconds_left -= 60
-#         except Exception as err_except:  # pylint: disable=broad-except
-#             logger.error("Error: %s", err_except)
-#             traceback.print_exc()
 
 def main(interactive=False, once=False):
     config = load_emailer_config_file(EMAIL_CONFIG_FILE)
