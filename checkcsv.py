@@ -97,7 +97,6 @@ def merge_data(main_file_path, new_file_path):  # Merges data from the new_file 
 def obfuscate_cc(credit_card_data):
     for pattern in CREDIT_CARD_PATTERNS:
         credit_card_data = re.sub(pattern, lambda m: f"{m.group(0)[:4]} XXXX XXXX {m.group(0)[-4:]}", credit_card_data)
-        # credit_card_data = re.sub(pattern, lambda m: m.group(0)[:4] + " XXXX XXXX " + m.group(0)[-4:], credit_card_data)
     return credit_card_data
 
 def find_csv_files(directory, main_file):

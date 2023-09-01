@@ -4,7 +4,7 @@ import yaml
 MAIN_CONFIG_FILE = 'config.yaml'
 EMAIL_CONFIG_FILE = 'emailerConfig.yaml'
 MAIN_CSV_FILE = './data/main.csv'
-DATA_DIRECTORY = './data/testdata/'
+DATA_DIRECTORY = './data/'
 FILE_EXTENSION = '.csv'
 
 ERROR_FNF = 'Config file not found.'

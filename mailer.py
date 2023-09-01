@@ -37,27 +37,6 @@ def update_sent_column(email_list):
     except Exception as err_except:  # pylint: disable=broad-except
         logger.error("Error updating sent column: %s", {str(err_except)})
 
-# def func_send_emails(server, senderaddress, email_data, content):
-#     unique_emails = {data["To"] for data in email_data}
-#     # logger.info("Sending email to unique: %s", unique_emails)
-#     for recipient_email in unique_emails:
-#         # logger.info("Current recipient_email: %s", recipient_email)
-#         if recipient_email in content:
-#             # logger.info("Preparing to send email to: %s", recipient_email)
-#             try:
-#                 email_content = content[recipient_email]
-#                 email_content["Subject"] = obfuscate_cc(email_content["Subject"])
-#                 # response = server.sendmail(f"Zen Alerts <{senderaddress}>", recipient_email, email_content.as_string(),)
-#                 server.sendmail(f"Zen Alerts <{senderaddress}>", recipient_email, email_content.as_string(),)
-#                 # logger.debug(msg=f"Response from sendmail for {recipient_email}: {response}")
-#                 update_sent_column([recipient_email])
-#                 for timer in range(20, 0, -1):
-#                     print(f"Next email will be sent in {timer} seconds")
-#                     time.sleep(1)
-#                 print("Email sent!")
-#             except smtplib.SMTPException as e_smtp:
-#                 logger.error("Failed to send email to %s: %s", recipient_email, e_smtp)
-#                 logger.error(traceback.format_exc())
 def func_send_emails(server, senderaddress, email_data, content):
     current_time = datetime.now().time()
     unique_emails = {data["To"] for data in email_data}
@@ -67,9 +46,9 @@ def func_send_emails(server, senderaddress, email_data, content):
         if recipient_email in content:
             # logger.info("Preparing to send email to: %s", recipient_email)
             try:
-                for timer in range(20, 0, -1):
+                for timer in range(20, 0, -10):
                     logger.info("Next email will be sent to %s with subject %s in %s seconds.", recipient_email, content[recipient_email]["Subject"], timer)
-                    time.sleep(1)
+                    time.sleep(10)
                 email_content = content[recipient_email]
                 email_content["Subject"] = obfuscate_cc(email_content["Subject"])
                 # response = server.sendmail(f"Zen Alerts <{senderaddress}>", recipient_email, email_content.as_string(),)
