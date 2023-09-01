@@ -3,7 +3,7 @@ import time as t
 from datetime import datetime, time
 from selenium import webdriver
 from navigator import Navigator
-from configs_setup import MAIN_CONFIG_FILE, load_config, setup_logger
+from configs_setup import MAIN_CONFIG_FILE, load_config, setup_logger  # pylint: disable=import-error
 import mailer
 
 logger = setup_logger('getMainLogger', "logs/main.log")
@@ -89,6 +89,7 @@ def main(web_driver):
     S(2)
     goto_barracuda_messagelogs_screen(nav)
     while True:
+        current_time = datetime.now().time()  # pylint: disable=redefined-outer-name
         logger.info("Current time: %s, | End of day is set as: %s | Script will stop automatically at %s", current_time, end_of_day, end_of_day)
         if current_time >= end_of_day:
             logger.info("Ending script, people have gone home...")
