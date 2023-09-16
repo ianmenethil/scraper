@@ -6,3 +6,7 @@
 *.pyc
 *.old
 %_code%_menethil%_brcd%scraper/
+__pycache__/
+data/
+logs/
+scraper_brcd/

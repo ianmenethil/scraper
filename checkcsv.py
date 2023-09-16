@@ -22,7 +22,6 @@ logger = setup_logger('getcheckCSVLogger', "logs/checkcsv.log")
 class CSVHandler:
     @staticmethod
     def read_data_from_csv(file_path):
-        # sourcery skip: remove-unnecessary-else, use-named-expression
         try:
             logger.info("Reading data from %s", {file_path})
             with open(file_path, mode='r', encoding='utf-8', errors='replace') as file:
@@ -56,9 +55,12 @@ class CSVHandler:
     @staticmethod
     def remove_unwanted_chars(file_path, chars_to_remove, replacement=' '):
         with open(file_path, mode='r', encoding='utf-8', errors='replace') as file:
-            lines = [line.replace(char, replacement) for char in chars_to_remove for line in file.readlines()]
+            lines = file.readlines()
+        for char in chars_to_remove:
+            lines = [line.replace(char, replacement) for line in lines]
         with open(file_path, mode='w', encoding='utf-8') as file:
             file.writelines(lines)
+        # logger.debug(f"After removal, first few lines: {lines[:3]}")
 
     @staticmethod
     def remove_unwanted_bytes(file_path, bytes_to_remove, replacement=b' '):
@@ -69,7 +71,8 @@ class CSVHandler:
         with open(file_path, 'wb') as file:
             file.write(data)
 
-def merge_data(main_file_path, new_file_path):  # Merges data from the new_file into the main_file based on unique 'Message ID'. Once merged, the new_file is deleted.
+def merge_data(main_file_path, new_file_path):
+    """Merges data from the new_file into the main_file based on unique 'Message ID'. Once merged, the new_file is deleted."""
     try:
         if not os.path.isfile(new_file_path):
             logger.error("File not found: %s", new_file_path)
@@ -103,7 +106,8 @@ def find_csv_files(directory, main_file):
     all_files = [os.path.join(directory, file) for file in os.listdir(directory) if file.endswith(FILE_EXTENSION)]
     return [file for file in all_files if file != main_file]
 
-def check_credit_card(data_frame):  # Obfuscates credit card details in the 'Subject' column of a dataframe.
+def check_credit_card(data_frame):
+    """Obfuscates credit card details in the 'Subject' column of a dataframe."""
     try:
         data_frame['Subject'] = data_frame['Subject'].astype(str).apply(obfuscate_cc)
     except Exception as e_exception:
@@ -115,15 +119,20 @@ def main():
     csv_files = find_csv_files(DATA_DIRECTORY, MAIN_CSV_FILE)
     for file_path in csv_files:
         try:
-            CSVHandler.remove_unwanted_bytes(file_path, UNWANTED_BYTES)
+            # First, check for unwanted characters and bytes
+            # with open(file_path, 'r', encoding='utf-8', errors='replace') as f:
+                # first_few_lines = [next(f) for _ in range(3)]
+            # logger.debug(f"Initial lines: {first_few_lines}")
             CSVHandler.remove_unwanted_chars(file_path, UNWANTED_CHARS)
+            # with open(file_path, 'r', encoding='utf-8', errors='replace') as f:
+                # first_few_lines = [next(f) for _ in range(3)]
+            # logger.debug(f"After removal: {first_few_lines}")
             CSVHandler.find_chars_in_csv(file_path, *UNWANTED_CHARS)
-            for byte in UNWANTED_BYTES:
-                CSVHandler.find_byte_in_csv(file_path, byte)
+            logger.info("Removed unwanted characters/bytes from %s, chars: %s, bytes: %s", file_path, UNWANTED_CHARS, UNWANTED_BYTES)
             merge_data(MAIN_CSV_FILE, file_path)
         except FileNotFoundError as error:
             logger.error("Error: %s", error)
-        except Exception as error:  # ignore pylint: disable=broad-except
+        except Exception as error:
             logger.error("Unexpected error occurred: %s", error)
 
 if __name__ == "__main__":

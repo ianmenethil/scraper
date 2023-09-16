@@ -3,7 +3,8 @@ import time as t
 from datetime import datetime, time
 from selenium import webdriver
 from navigator import Navigator
-from configs_setup import MAIN_CONFIG_FILE, load_config, setup_logger  # pylint: disable=import-error
+from configs_setup import MAIN_CONFIG_FILE, load_config, setup_logger
+
 import mailer
 
 logger = setup_logger('getMainLogger', "logs/main.log")
@@ -12,7 +13,6 @@ end_of_day = time(17, 30, 0)
 S = t.sleep
 
 def start_get_data_auto(nav, wait_time, initial_run=True):
-    # logger.info('Setting up Message Logs table')
     logger.info("Checking if it is the first run of the day.")
     if initial_run:
         nav.setup_messagelogs_table()
@@ -21,11 +21,10 @@ def start_get_data_auto(nav, wait_time, initial_run=True):
         logger.info("Not the first run of the day. Skipping setup. Going to search and export")
     logger.info("About to call search_and_export script.")
     nav.search_and_export()
-    # logger.info("About to call mailer script.")
     try:
         mailer.main(interactive=False, once=True)
         logger.info("Mailer script called successfully.")
-    except Exception as except_err:  # ignore pylint: disable=broad-except
+    except Exception as except_err:
         logger.error("Failed to call mailer script: %s", except_err)
     try:
         total_minutes = wait_time // 60
@@ -66,17 +65,17 @@ def get_timer_from_user():
     return wait_time
 
 def goto_barracuda_messagelogs_screen(nav):
-    logger.info("Navigating to Barracuda main screen")
+    logger.debug("Starting goto_barracuda_messagelogs_screen() function.")
     nav.messagelogs_screen()
     S(2)
 
 def get_data(nav, wait_time):
-    logger.info("Navigating to Message Log screen")
+    logger.debug("Starting get_data() function.")
     start_get_data_auto(nav, wait_time)
     S(1)
 
 def main(web_driver):
-    logger.info('Main function started')
+    logger.debug('Starting main() function.')
     try:
         config = load_config(MAIN_CONFIG_FILE)
         wait_time = get_timer_from_user()
@@ -89,19 +88,18 @@ def main(web_driver):
     S(2)
     goto_barracuda_messagelogs_screen(nav)
     while True:
-        current_time = datetime.now().time()  # pylint: disable=redefined-outer-name
+        # current_time = datetime.now().time()
         logger.info("Current time: %s, | End of day is set as: %s | Script will stop automatically at %s", current_time, end_of_day, end_of_day)
         if current_time >= end_of_day:
             logger.info("Ending script, people have gone home...")
             driver.quit()
             sys.exit(0)
         try:
-            logger.info("Main loop from main.py starting.")
             get_data(nav, wait_time)
         except ValueError as va_error:
             logger.error("An error occurred on main(): %s", va_error)
             break
-        except Exception as exception_error:  # ignore pylint: disable=broad-except
+        except Exception as exception_error:
             logger.error("Unexpected error occurred in main(): %s", exception_error)
             break
 
