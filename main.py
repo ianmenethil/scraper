@@ -8,7 +8,6 @@ from configs_setup import MAIN_CONFIG_FILE, load_config, setup_logger
 import mailer
 
 logger = setup_logger('getMainLogger', "logs/main.log")
-current_time = datetime.now().time()
 end_of_day = time(17, 30, 0)
 S = t.sleep
 
@@ -43,15 +42,16 @@ def start_get_data_auto(nav, wait_time, initial_run=True):
 def load_chrome_driver():
     chrome_options = webdriver.ChromeOptions()
     # CHROME_DRIVER_PATH = ""
-    chrome_options.add_experimental_option("prefs", {"download.default_directory": "D:\\_code\\_menethil\\_brcd\\scraper\\data",
+    chrome_options.add_experimental_option("prefs", {"download.default_directory": "F:\\_menethil\\_brcd\\scraper\\data",
                                                      "download.prompt_for_download": False,
                                                      "download.directory_upgrade": True,
                                                      "safebrowsing.enabled": True})
     chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
     chrome_options.add_argument("--disable-usb")
-    chrome_options.add_argument("--log-level=3")
+    # chrome_options.add_argument("--log-level=3")
     # chrome_options.add_argument("--headless")
     chrome_options.add_argument("--window-size=1920x1080")
+    logger.info("Starting Chrome driver with options: %s", chrome_options.arguments)
     return webdriver.Chrome(options=chrome_options)
 
 def get_timer_from_user():
@@ -88,7 +88,7 @@ def main(web_driver):
     S(2)
     goto_barracuda_messagelogs_screen(nav)
     while True:
-        # current_time = datetime.now().time()
+        current_time = datetime.now().time()
         logger.info("Current time: %s, | End of day is set as: %s | Script will stop automatically at %s", current_time, end_of_day, end_of_day)
         if current_time >= end_of_day:
             logger.info("Ending script, people have gone home...")

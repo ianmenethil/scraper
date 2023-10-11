@@ -98,7 +98,6 @@ class Navigator:
             logger.info('"From" clicked')
             S(1)
             emaildisplay_dropdown_option = WebDriverWait(self.driver, 60).until(EC.visibility_of_element_located((By.CSS_SELECTOR, "li[data-menu-item-value='both']")))
-            # emaildisplay_dropdown_option.click()
             success = self.try_click(emaildisplay_dropdown_option)
             if not success:
                 logger.error("Failed to set emails to both.")
@@ -125,15 +124,9 @@ class Navigator:
             S(2)
 
             wait = WebDriverWait(self.driver, 60)
-            # self.setup_dropdown_values(wait, "domain_id_select", "All domains")
-            # logger.info('Domains: All domains')
-            # S(1)
             self.setup_dropdown_values(wait, "search_action", "Quarantined")
             logger.info('Email Status: Quarantined')
             S(1)
-            # self.setup_dropdown_values(wait, "limit", "200")
-            # logger.info('Table Limit: 200')
-            # S(1)
             self.setup_dropdown_values(wait, "search_range_select", "2 days")
             logger.info('Date Range: 2 days')
             S(1)

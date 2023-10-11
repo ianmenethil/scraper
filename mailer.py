@@ -31,7 +31,11 @@ def update_sent_column(email_list):
         data_frame = pd.read_csv(MAIN_CSV_FILE)
         for index, row in data_frame.iterrows():
             if row["To"] in email_list:
+
+                # data_frame["emailStatus"] = data_frame["emailStatus"].astype(str)
+
                 data_frame.at[index, "emailStatus"] = "1"
+
                 logger.debug("Updating CSV file with %s and %s", row, email_list)
         data_frame.to_csv(MAIN_CSV_FILE, index=False, encoding='utf-8', errors='ignore')
     except Exception as err_except:
