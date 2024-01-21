@@ -119,14 +119,7 @@ def main():
     csv_files = find_csv_files(DATA_DIRECTORY, MAIN_CSV_FILE)
     for file_path in csv_files:
         try:
-            # First, check for unwanted characters and bytes
-            # with open(file_path, 'r', encoding='utf-8', errors='replace') as f:
-                # first_few_lines = [next(f) for _ in range(3)]
-            # logger.debug(f"Initial lines: {first_few_lines}")
             CSVHandler.remove_unwanted_chars(file_path, UNWANTED_CHARS)
-            # with open(file_path, 'r', encoding='utf-8', errors='replace') as f:
-                # first_few_lines = [next(f) for _ in range(3)]
-            # logger.debug(f"After removal: {first_few_lines}")
             CSVHandler.find_chars_in_csv(file_path, *UNWANTED_CHARS)
             logger.info("Removed unwanted characters/bytes from %s, chars: %s, bytes: %s", file_path, UNWANTED_CHARS, UNWANTED_BYTES)
             merge_data(MAIN_CSV_FILE, file_path)

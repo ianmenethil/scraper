@@ -11,6 +11,7 @@ logger = setup_logger('getMainLogger', "logs/main.log")
 end_of_day = time(17, 30, 0)
 S = t.sleep
 
+
 def start_get_data_auto(nav, wait_time, initial_run=True):
     logger.info("Checking if it is the first run of the day.")
     if initial_run:
@@ -39,13 +40,17 @@ def start_get_data_auto(nav, wait_time, initial_run=True):
             logger.error("Error while quitting the driver: %s", exception_error)
         sys.exit(0)
 
+
 def load_chrome_driver():
     chrome_options = webdriver.ChromeOptions()
     # CHROME_DRIVER_PATH = ""
-    chrome_options.add_experimental_option("prefs", {"download.default_directory": "F:\\_menethil\\_brcd\\scraper\\data",
-                                                     "download.prompt_for_download": False,
-                                                     "download.directory_upgrade": True,
-                                                     "safebrowsing.enabled": True})
+    chrome_options.add_experimental_option(
+        "prefs", {
+            "download.default_directory": "F:\\_Python\\_barracuda\\scraper\\data",
+            "download.prompt_for_download": False,
+            "download.directory_upgrade": True,
+            "safebrowsing.enabled": True
+        })
     chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
     chrome_options.add_argument("--disable-usb")
     # chrome_options.add_argument("--log-level=3")
@@ -53,6 +58,7 @@ def load_chrome_driver():
     chrome_options.add_argument("--window-size=1920x1080")
     logger.info("Starting Chrome driver with options: %s", chrome_options.arguments)
     return webdriver.Chrome(options=chrome_options)
+
 
 def get_timer_from_user():
     default_wait_time = 1200  # 20 minutes
@@ -64,15 +70,18 @@ def get_timer_from_user():
         logger.info("User entered nothing or invalid input. Using default wait time: %s", wait_time)
     return wait_time
 
+
 def goto_barracuda_messagelogs_screen(nav):
     logger.debug("Starting goto_barracuda_messagelogs_screen() function.")
     nav.messagelogs_screen()
     S(2)
 
+
 def get_data(nav, wait_time):
     logger.debug("Starting get_data() function.")
     start_get_data_auto(nav, wait_time)
     S(1)
+
 
 def main(web_driver):
     logger.debug('Starting main() function.')
@@ -102,6 +111,7 @@ def main(web_driver):
         except Exception as exception_error:
             logger.error("Unexpected error occurred in main(): %s", exception_error)
             break
+
 
 if __name__ == '__main__':
     driver = load_chrome_driver()
