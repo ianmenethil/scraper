@@ -46,7 +46,7 @@ def load_chrome_driver():
     # CHROME_DRIVER_PATH = ""
     chrome_options.add_experimental_option(
         "prefs", {
-            "download.default_directory": "F:\\_Python\\_barracuda\\scraper\\data",
+            "download.default_directory": "F:\\_Python\\__Zenith\\_barracuda\\scraper\\data",
             "download.prompt_for_download": False,
             "download.directory_upgrade": True,
             "safebrowsing.enabled": True
